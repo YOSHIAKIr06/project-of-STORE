@@ -14,7 +14,7 @@
 4. GitHub Actionsの `Firebase Production Deploy` が起動する
 5. `npm ci` を実行する
 6. `npm run build` でViteをビルドする
-7. `dist/` をFirebase Hostingへデプロイする
+7. `dist/` をFirebase Hostingのliveチャンネルへデプロイする
 8. 実行結果・成功／失敗・ログはGitHub Actionsに残る
 
 ## 自動で本番公開されない仕組み
@@ -32,7 +32,7 @@
 
 そのコミットがGitHubに残り、GitHub Actionsが本番デプロイを実行します。
 
-これにより、誰が・いつ・どのタイミングでデプロイ要求を出したかをGitHubのコミット履歴から追跡できます。
+これにより、いつ・どのタイミングでデプロイ要求を出したかをGitHubのコミット履歴から追跡できます。
 
 ## GitHub側で必要な設定
 
@@ -45,16 +45,39 @@ GitHubの `production` Environment に、次の値を登録します。
 
 ### Secret
 
-- `FIREBASE_TOKEN`
-  - Firebase CLIが本番デプロイに使用する認証情報
+- `FIREBASE_SERVICE_ACCOUNT`
+  - Firebase Hostingへのデプロイに使うサービスアカウントJSON全文
 
 これらが未設定の場合、GitHub Actionsは意図的に失敗し、本番公開は行われません。
+
+## Firebase認証方式
+
+このプロジェクトでは、レガシーな `FIREBASE_TOKEN` は使用しません。
+
+GitHub Actionsからは `FirebaseExtended/action-hosting-deploy@v0` を使用し、`FIREBASE_SERVICE_ACCOUNT` に保存したサービスアカウントJSONで認証します。
+
+認証情報はコードへ直接書かず、GitHub Secretsで管理します。
 
 ## Firebase Hosting設定
 
 `firebase.json` では、Viteのビルド成果物である `dist/` を公開対象にしています。
 
 SPAとして動作できるように、すべてのURLを `/index.html` へrewriteしています。
+
+本番デプロイ時はFirebase Hostingの `live` チャンネルへ公開します。
+
+## 初回セットアップ
+
+初回だけ、FirebaseプロジェクトとGitHub Secretsを準備します。
+
+1. FirebaseコンソールでSTORE用プロジェクトを用意する
+2. Hostingを有効化する
+3. FirebaseプロジェクトIDを確認する
+4. デプロイ用サービスアカウントを用意する
+5. GitHubの `production` Environmentへ次を登録する
+   - Variable: `FIREBASE_PROJECT_ID`
+   - Secret: `FIREBASE_SERVICE_ACCOUNT`
+6. `.deploy/deploy-request.json` を更新してテストデプロイする
 
 ## デプロイ履歴の確認方法
 
@@ -67,6 +90,9 @@ GitHubリポジトリの `Actions` を開き、`Firebase Production Deploy` を�
 - 成功／失敗
 - ビルドログ
 - Firebaseデプロイログ
+- 実行サマリー
+
+また、`.deploy/deploy-request.json` のコミット履歴を見れば、明示的にデプロイ要求を出したタイミングも追跡できます。
 
 ## 運用ルール
 
@@ -75,6 +101,7 @@ GitHubリポジトリの `Actions` を開き、`Firebase Production Deploy` を�
 - 大きな変更の前後ではGitHub上のコミットを確認する
 - デプロイ失敗時はGitHub Actionsのログを確認してから再実行する
 - 認証情報はコードへ直接書かず、GitHub Secretsで管理する
+- `FIREBASE_SERVICE_ACCOUNT` の内容はREADMEやIssueへ貼らない
 
 ## 関連ファイル
 
