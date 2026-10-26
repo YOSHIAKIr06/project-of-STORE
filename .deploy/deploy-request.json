@@ -1,0 +1,8 @@
+{
+  "request_id": "bootstrap",
+  "target": "production",
+  "requested_at": null,
+  "requested_by": "bootstrap",
+  "source_commit": null,
+  "note": "This file is updated only when a Firebase production deployment is explicitly requested."
+}
