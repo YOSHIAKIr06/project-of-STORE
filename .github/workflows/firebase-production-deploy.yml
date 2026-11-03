@@ -1,9 +1,9 @@
-name: Firebase Production Deploy
+name: Firebase ROUTE-05 Deploy
 
 on:
   push:
     branches:
-      - main
+      - route-05
     paths:
       - '.deploy/deploy-request.json'
   workflow_dispatch:
@@ -13,9 +13,9 @@ permissions:
 
 jobs:
   deploy:
-    name: Build and deploy to Firebase Hosting
+    name: Build and deploy ROUTE-05 to Firebase Hosting
     runs-on: ubuntu-latest
-    environment: production
+    environment: route-05
 
     steps:
       - name: Checkout source
@@ -39,15 +39,15 @@ jobs:
           FIREBASE_SERVICE_ACCOUNT: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
         run: |
           if [ -z "$FIREBASE_PROJECT_ID" ]; then
-            echo "FIREBASE_PROJECT_ID is not configured."
+            echo "FIREBASE_PROJECT_ID is not configured for route-05."
             exit 1
           fi
           if [ -z "$FIREBASE_SERVICE_ACCOUNT" ]; then
-            echo "FIREBASE_SERVICE_ACCOUNT is not configured."
+            echo "FIREBASE_SERVICE_ACCOUNT is not configured for route-05."
             exit 1
           fi
 
-      - name: Deploy to Firebase Hosting live channel
+      - name: Deploy ROUTE-05 to Firebase Hosting live channel
         id: firebase_deploy
         uses: FirebaseExtended/action-hosting-deploy@v0
         with:
@@ -58,7 +58,7 @@ jobs:
 
       - name: Deployment summary
         run: |
-          echo "## Firebase production deployment" >> "$GITHUB_STEP_SUMMARY"
+          echo "## Firebase ROUTE-05 deployment" >> "$GITHUB_STEP_SUMMARY"
           echo "- Source commit: $GITHUB_SHA" >> "$GITHUB_STEP_SUMMARY"
           echo "- Firebase project: ${{ vars.FIREBASE_PROJECT_ID }}" >> "$GITHUB_STEP_SUMMARY"
           echo "- URL: ${{ steps.firebase_deploy.outputs.details_url }}" >> "$GITHUB_STEP_SUMMARY"
