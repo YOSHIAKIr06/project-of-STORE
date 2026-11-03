@@ -1,5 +1,6 @@
 {
   "hosting": {
+    "site": "yoshiakir06-route02-2026",
     "public": "dist",
     "ignore": [
       "firebase.json",
