@@ -36,7 +36,32 @@ jobs:
       - name: Install Firebase CLI
         run: npm install --global firebase-tools
 
-      - name: Create Hosting sites if missing
+      - name: Ensure neutral default Hosting site exists
+        env:
+          FIREBASE_PROJECT_ID: ${{ vars.FIREBASE_PROJECT_ID }}
+        run: |
+          set -e
+          existing="$(firebase hosting:sites:list --project "$FIREBASE_PROJECT_ID" --json)"
+
+          if echo "$existing" | grep -Eq '"type"[[:space:]]*:[[:space:]]*"DEFAULT_SITE"'; then
+            echo "A default Hosting site already exists; leaving it unchanged."
+          else
+            echo "No default Hosting site found. Creating a neutral default site first."
+            default_site="$FIREBASE_PROJECT_ID"
+
+            if firebase hosting:sites:create "$default_site" --project "$FIREBASE_PROJECT_ID"; then
+              echo "Created default site: $default_site"
+            else
+              suffix="-root"
+              max_base=$((30 - ${#suffix}))
+              base="${FIREBASE_PROJECT_ID:0:$max_base}"
+              default_site="${base}${suffix}"
+              echo "Project-ID site name unavailable; trying fallback: $default_site"
+              firebase hosting:sites:create "$default_site" --project "$FIREBASE_PROJECT_ID"
+            fi
+          fi
+
+      - name: Create ROUTE-01 to ROUTE-05 Hosting sites if missing
         env:
           FIREBASE_PROJECT_ID: ${{ vars.FIREBASE_PROJECT_ID }}
         run: |
@@ -52,13 +77,19 @@ jobs:
           existing="$(firebase hosting:sites:list --project "$FIREBASE_PROJECT_ID" --json)"
 
           for site in "${sites[@]}"; do
-            if echo "$existing" | grep -q "\"$site\""; then
+            if echo "$existing" | grep -q "$site"; then
               echo "$site already exists; skipping."
             else
               echo "Creating $site..."
               firebase hosting:sites:create "$site" --project "$FIREBASE_PROJECT_ID"
             fi
           done
+
+      - name: Verify routes
+        env:
+          FIREBASE_PROJECT_ID: ${{ vars.FIREBASE_PROJECT_ID }}
+        run: |
+          firebase hosting:sites:list --project "$FIREBASE_PROJECT_ID"
 
       - name: Summary
         env:
